@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mol — your price, their price, everyone's price</title>
+<style>
+:root {
+  --beige-50:#faf6ec; --beige-100:#f2e9d6; --beige-200:#e7dabf;
+  --paper:#fffdf8; --ink:#2c2a25; --ink-soft:#847c6b; --ink-soft2:#a89f8c;
+  --blue-900:#1f3a5c; --blue-800:#274a72; --blue-700:#2f5d87; --blue-500:#4d7ea8;
+  --blue-100:#e1ecf4; --blue-050:#f1f6fa;
+  --gold:#c69a52; --rose:#b5623f;
+  --display:'Georgia','Times New Roman',serif; --mono:'Courier New',monospace;
+  --shadow: 0 6px 18px rgba(31,58,92,.08);
+}
+* { box-sizing: border-box; }
+html,body{height:100%;}
+body { margin:0; background:var(--beige-50); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+a{color:inherit;}
+::selection{ background:var(--blue-100); }
+
+/* ---------- header ---------- */
+header { position:sticky; top:0; z-index:500; display:flex; align-items:center; gap:18px; padding:14px 28px; background:var(--paper); border-bottom:1px solid var(--beige-200); flex-wrap:wrap; }
+.logo { font-family:var(--display); font-size:28px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; letter-spacing:.3px; }
+.logo .icon{ color:var(--gold); display:inline-block; transition:transform .4s ease; font-weight:400; }
+.logo:hover .icon{ transform:rotate(-14deg); }
+.logo .name{ background:linear-gradient(120deg, var(--blue-900) 25%, var(--blue-700) 55%, var(--gold) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:.4px; }
+.tagline { color:var(--ink-soft); font-size:12px; flex:0 0 auto; display:none; }
+@media(min-width:860px){ .tagline{ display:block; } }
+nav { display:flex; gap:4px; }
+nav button { background:none; border:none; color:var(--ink); opacity:.72; font-size:14px; padding:8px 14px; border-radius:20px; cursor:pointer; font-weight:600; transition:.15s; }
+nav button:hover { opacity:1; background:var(--blue-050); }
+nav button.active { opacity:1; background:var(--blue-100); color:var(--blue-900); }
+.badge { background:var(--rose); color:#fff; border-radius:10px; padding:1px 7px; font-size:11px; margin-left:5px; }
+.header-right{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+.icon-circle{ width:40px; height:40px; border-radius:50%; border:1px solid var(--beige-200); background:var(--beige-50); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:17px; color:var(--blue-900); transition:.15s; position:relative; }
+.icon-circle:hover{ background:var(--blue-100); border-color:var(--blue-100); transform:translateY(-1px); }
+.search-box{ display:flex; align-items:center; gap:8px; background:var(--beige-50); border:1px solid var(--beige-200); border-radius:22px; padding:8px 16px; width:190px; transition:.2s; }
+.search-box:focus-within{ width:260px; border-color:var(--blue-500); box-shadow:0 0 0 3px var(--blue-100); }
+.search-box input{ border:none; background:none; outline:none; font-size:13.5px; width:100%; color:var(--ink); }
+.search-box .go{ color:var(--ink-soft2); }
+@media(max-width:640px){ .search-box{ width:38px; padding:8px; overflow:hidden; } .search-box input{ display:none; } }
+
+/* ---------- layout ---------- */
+main { max-width:1100px; margin:0 auto; padding:0 24px 90px; }
+.view { display:none; }
+.view.active { display:block; animation:fadeUp .35s ease; }
+@keyframes fadeUp{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+/* ---------- hero ---------- */
+.hero { padding:52px 0 32px; text-align:center; }
+.hero .eyebrow-lg{ color:var(--blue-700); font-weight:700; letter-spacing:.14em; font-size:12px; text-transform:uppercase; margin-bottom:10px; }
+.hero h1 { font-family:var(--display); font-size:clamp(30px,5vw,46px); margin:0 auto 14px; max-width:720px; line-height:1.18; color:var(--blue-900); }
+.hero h1 .accent{ color:var(--gold); font-style:italic; }
+.hero p { color:var(--ink-soft); max-width:560px; margin:0 auto; font-size:15.5px; line-height:1.65; }
+.hero-stats{ display:flex; justify-content:center; gap:34px; margin-top:30px; flex-wrap:wrap; }
+.hero-stat{ text-align:center; }
+.hero-stat b{ display:block; font-family:var(--display); font-size:22px; color:var(--blue-800); }
+.hero-stat span{ font-size:11.5px; color:var(--ink-soft2); text-transform:uppercase; letter-spacing:.06em; }
+
+/* ---------- category tiles ---------- */
+.section-head{ display:flex; align-items:baseline; justify-content:space-between; margin:8px 0 16px; }
+.section-head h2{ font-family:var(--display); font-size:22px; margin:0; color:var(--blue-900); }
+.section-head .sub{ color:var(--ink-soft2); font-size:13px; }
+.cat-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:14px; margin-bottom:44px; }
+.cat-tile{ background:var(--paper); border:1px solid var(--beige-200); border-radius:16px; padding:18px 10px; text-align:center; cursor:pointer; transition:.18s; }
+.cat-tile:hover{ transform:translateY(-3px); box-shadow:var(--shadow); border-color:var(--blue-100); }
+.cat-tile .emoji{ font-size:30px; display:block; margin-bottom:8px; }
+.cat-tile .name{ font-size:12.5px; font-weight:700; color:var(--blue-800); }
+
+/* ---------- filters + grid ---------- */
+.filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+.filter { background:var(--paper); border:1px solid var(--beige-200); color:var(--ink); padding:7px 15px; border-radius:18px; font-size:13px; cursor:pointer; font-weight:600; transition:.15s; }
+.filter:hover{ border-color:var(--blue-500); }
+.filter.active { background:var(--blue-800); color:#fff; border-color:var(--blue-800); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:18px; }
+.card { background:var(--paper); border:1px solid var(--beige-200); color:var(--ink); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; transition:.18s; }
+.card:hover{ box-shadow:var(--shadow); transform:translateY(-2px); }
+.card-img { font-size:52px; text-align:center; padding:26px 0; background:var(--blue-050); position:relative; }
+.card-body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:4px; flex:1; }
+.card-cat { font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--rose); font-weight:700; }
+.card-body h4 { margin:2px 0 0; font-size:15.5px; font-family:var(--display); color:var(--blue-900); }
+.card-seller { font-size:11.5px; color:var(--ink-soft2); }
+.card-blurb { font-size:12.5px; color:var(--ink-soft); line-height:1.45; flex:1; margin:6px 0 10px; }
+.card-foot { display:flex; align-items:center; justify-content:space-between; margin-top:auto; }
+.card-price { font-family:var(--mono); font-weight:700; font-size:15px; color:var(--blue-900); }
+.btn { border:none; border-radius:22px; padding:9px 16px; font-size:13px; cursor:pointer; font-weight:700; transition:.15s; }
+.btn:active{ transform:scale(.97); }
+.btn-primary { background:var(--blue-800); color:#fff; }
+.btn-primary:hover{ background:var(--blue-900); }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+.btn-negotiate { background:var(--gold); color:var(--blue-900); }
+.btn-negotiate:hover{ filter:brightness(1.05); }
+.btn-outline{ background:none; border:1px solid var(--beige-200); color:var(--blue-800); }
+.btn-wide { width:100%; padding:13px; font-size:15px; margin-top:16px; }
+.empty { color:var(--ink-soft2); padding:30px 0; text-align:center; }
+
+/* ---------- search page ---------- */
+.search-hero{ padding:36px 0 8px; }
+.search-hero h1{ font-family:var(--display); font-size:30px; color:var(--blue-900); margin:0 0 14px; }
+.search-big{ display:flex; gap:10px; background:var(--paper); border:1px solid var(--beige-200); border-radius:18px; padding:6px; margin-bottom:22px; }
+.search-big input{ flex:1; border:none; outline:none; background:none; padding:12px 14px; font-size:15px; }
+.search-meta{ color:var(--ink-soft2); font-size:13px; margin-bottom:14px; }
+
+/* ---------- modal (login/negotiate) ---------- */
+.modal-backdrop { position:fixed; inset:0; background:rgba(31,42,58,.45); backdrop-filter:blur(1px); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+.modal-backdrop.open { display:flex; }
+.modal { background:var(--paper); color:var(--ink); border-radius:20px; width:100%; max-width:440px; padding:22px 24px 20px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(20,30,45,.25); }
+.modal-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+.modal-head h3 { margin:2px 0 0; font-family:var(--display); font-size:19px; color:var(--blue-900); }
+.eyebrow { font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--rose); font-weight:700; }
+.icon-btn { background:none; border:none; font-size:16px; cursor:pointer; color:var(--ink-soft2); }
+.chat { flex:1; overflow-y:auto; margin:10px 0; display:flex; flex-direction:column; gap:8px; max-height:240px; padding-right:4px; }
+.bubble { padding:9px 13px; border-radius:14px; font-size:13.5px; line-height:1.4; max-width:84%; }
+.bubble.seller { background:var(--beige-100); align-self:flex-start; border-bottom-left-radius:4px; }
+.bubble.buyer { background:var(--blue-800); align-self:flex-end; border-bottom-right-radius:4px; color:#fff; }
+.bubble.typing { font-style:italic; color:var(--ink-soft2); background:var(--beige-100); align-self:flex-start; }
+.chat-input { display:flex; gap:8px; }
+.chat-input input { flex:1; border:1px solid var(--beige-200); border-radius:20px; padding:9px 14px; font-size:13.5px; background:#fff; }
+.hint { font-size:11px; color:var(--ink-soft2); margin-top:8px; text-align:center; }
+.deal-box { text-align:center; padding:14px 0 4px; }
+.deal-price { font-family:var(--mono); font-size:26px; font-weight:700; color:var(--rose); }
+.deal-sub { font-size:12.5px; color:var(--ink-soft); margin:4px 0 12px; }
+
+/* ---------- auth ---------- */
+.auth-tabs{ display:flex; gap:4px; background:var(--beige-100); border-radius:14px; padding:4px; margin:14px 0 4px; }
+.auth-tab{ flex:1; text-align:center; padding:9px; border-radius:11px; font-size:13.5px; font-weight:700; cursor:pointer; color:var(--ink-soft); }
+.auth-tab.active{ background:var(--paper); color:var(--blue-900); box-shadow:var(--shadow); }
+.auth-form{ display:none; flex-direction:column; gap:12px; margin-top:14px; }
+.auth-form.active{ display:flex; }
+.auth-form label{ font-size:12.5px; color:var(--ink-soft); display:flex; flex-direction:column; gap:6px; }
+.auth-form input{ border:1px solid var(--beige-200); border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; }
+.auth-note{ font-size:11.5px; color:var(--ink-soft2); text-align:center; margin-top:6px; }
+
+/* ---------- account page ---------- */
+.acct-card{ background:var(--paper); border:1px solid var(--beige-200); border-radius:18px; padding:26px; max-width:480px; }
+.acct-avatar{ width:56px; height:56px; border-radius:50%; background:var(--blue-100); color:var(--blue-900); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:22px; font-weight:700; margin-bottom:14px; }
+.acct-row{ display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--beige-100); font-size:14px; }
+.acct-row span:first-child{ color:var(--ink-soft2); }
+
+/* ---------- seller ---------- */
+.seller-sub { color:var(--ink-soft); max-width:520px; font-size:14px; line-height:1.55; margin-bottom:22px; }
+.seller-form { background:var(--paper); border:1px solid var(--beige-200); padding:22px; border-radius:16px; display:flex; flex-direction:column; gap:14px; max-width:520px; }
+.seller-form label { display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--ink-soft); }
+.seller-form input, .seller-form select, .seller-form textarea { background:var(--beige-50); border:1px solid var(--beige-200); color:var(--ink); border-radius:8px; padding:9px 11px; font-size:13.5px; font-family:inherit; }
+.seller-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.secret-tag { color:var(--gold); font-size:10.5px; margin-left:6px; }
+.seller-list { display:flex; flex-direction:column; gap:10px; max-width:600px; margin-top:14px; }
+.seller-item { background:var(--paper); border:1px solid var(--beige-200); padding:12px 16px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; }
+.seller-item-prices { text-align:right; display:flex; flex-direction:column; gap:2px; font-family:var(--mono); font-size:13px; }
+
+/* ---------- cart ---------- */
+.cart-list { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+.cart-item { background:var(--paper); border:1px solid var(--beige-200); border-radius:14px; padding:12px 16px; display:flex; align-items:center; gap:14px; }
+.cart-item-icon { font-size:26px; }
+.cart-item-info { flex:1; }
+.cart-item-price { font-family:var(--mono); font-weight:700; color:var(--blue-900); }
+.cart-total { display:flex; justify-content:space-between; padding:14px 4px; border-top:1px solid var(--beige-200); font-size:16px; color:var(--blue-900); font-weight:700; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--blue-900); color:#fff; padding:12px 22px; border-radius:24px; font-weight:600; font-size:14px; z-index:1100; display:none; box-shadow:0 8px 24px rgba(0,0,0,.2); }
+
+footer{ text-align:center; padding:28px; color:var(--ink-soft2); font-size:12px; border-top:1px solid var(--beige-200); }
+
+@media (max-width:560px){ .hero h1{font-size:26px;} .seller-row{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" onclick="showView('home')"><span class="icon">⚖</span><span class="name">Mol</span></div>
+  <div class="tagline">your price. their price. everyone's price.</div>
+  <nav>
+    <button id="nav-home" class="active" onclick="showView('home')">Market</button>
+    <button id="nav-seller" onclick="showView('seller')">Sell</button>
+    <button id="nav-cart" onclick="showView('cart')">Cart <span class="badge" id="cart-count" style="display:none">0</span></button>
+  </nav>
+  <div class="header-right">
+    <div class="search-box" onclick="focusSearch(event)">
+      <span>🔍</span>
+      <input id="header-search" placeholder="Search products…" onkeydown="if(event.key==='Enter'){goSearch(this.value)}">
+    </div>
+    <div class="icon-circle" onclick="openAccount()" title="Account">👤</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= HOME ================= -->
+  <div id="view-home" class="view active">
+    <section class="hero">
+      <div class="eyebrow-lg">India's first bargaining marketplace</div>
+      <h1>Every price here is <span class="accent">a starting point.</span></h1>
+      <p>Mol connects you directly with small sellers, artisans and local shops across India. Browse honest listings, then make an offer — our AI negotiates like a real shopkeeper, on behalf of sellers who can't sit online all day answering messages.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><b id="stat-products">0</b><span>Live listings</span></div>
+        <div class="hero-stat"><b id="stat-categories">0</b><span>Categories</span></div>
+        <div class="hero-stat"><b>5</b><span>Rounds to deal</span></div>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>Shop by category</h2>
+      <div class="sub">Tap a category to jump straight in</div>
+    </div>
+    <div class="cat-grid" id="cat-grid"></div>
+
+    <div class="section-head">
+      <h2>Popular right now</h2>
+      <div class="sub" id="grid-count"></div>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- ================= SEARCH ================= -->
+  <div id="view-search" class="view">
+    <div class="search-hero">
+      <h1>Find anything</h1>
+      <div class="search-big">
+        <span style="padding:10px 0 10px 8px">🔍</span>
+        <input id="search-input" placeholder="Try 'saree', 'cycle', 'electronics'…" oninput="renderSearch()">
+      </div>
+      <div class="search-meta" id="search-meta"></div>
+    </div>
+    <div class="grid" id="search-grid"></div>
+  </div>
+
+  <!-- ================= SELLER ================= -->
+  <div id="view-seller" class="view">
+    <h2 style="font-family:var(--display); color:var(--blue-900);">Sell on Mol</h2>
+    <p class="seller-sub">Set your listed price and your real minimum. Our AI negotiates on your behalf — you never have to answer a single haggling message yourself.</p>
+    <form class="seller-form" id="seller-form">
+      <label>Product name <input id="f-name" placeholder="e.g. Hand-stitched Leather Wallet" required></label>
+      <label>Your shop / name <input id="f-seller" placeholder="e.g. Meera Leather Works, Kanpur"></label>
+      <label>Category
+        <select id="f-category">
+          <option>Fashion</option><option>Mobility</option><option>Home</option>
+          <option>Electronics</option><option>Grocery</option><option>Footwear</option><option>Other</option>
+        </select>
+      </label>
+      <div class="seller-row">
+        <label>Listed price (₹) <input id="f-listed" type="number" placeholder="1200" required></label>
+        <label>Your minimum price (₹) <span class="secret-tag">stays private</span> <input id="f-floor" type="number" placeholder="850" required></label>
+      </div>
+      <label>Short description <textarea id="f-blurb" rows="2" placeholder="What makes it worth buying?"></textarea></label>
+      <button class="btn btn-primary" type="submit">List product</button>
+    </form>
+    <h3 style="margin-top:36px; color:var(--blue-900); font-family:var(--display);">Your live listings</h3>
+    <div class="seller-list" id="seller-list"></div>
+  </div>
+
+  <!-- ================= CART ================= -->
+  <div id="view-cart" class="view">
+    <h2 style="font-family:var(--display); color:var(--blue-900);">Your cart</h2>
+    <div id="cart-empty" class="empty">Nothing here yet — go strike a deal on the Market tab.</div>
+    <div id="cart-list" class="cart-list"></div>
+    <div id="cart-total-row" class="cart-total" style="display:none"><span>Total</span><strong id="cart-total"></strong></div>
+    <button id="place-order" class="btn btn-primary btn-wide" style="display:none" onclick="placeOrder()">Place order</button>
+  </div>
+
+  <!-- ================= ACCOUNT ================= -->
+  <div id="view-account" class="view">
+    <h2 style="font-family:var(--display); color:var(--blue-900);">My Account</h2>
+    <div class="acct-card" id="acct-card"></div>
+  </div>
+
+</main>
+
+<footer>Mol — a hackathon prototype. Built with beige, blue, and a little bargaining spirit.</footer>
+
+<!-- ---- Negotiation modal ---- -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="eyebrow">negotiating</div><h3 id="modal-title"></h3></div>
+      <button class="icon-btn" onclick="closeModal()">✕</button>
+    </div>
+    <svg id="tarazu" viewBox="0 0 220 140" width="100%" height="130" style="overflow:visible">
+      <line x1="110" y1="18" x2="110" y2="118" stroke="var(--gold)" stroke-width="4"/>
+      <circle cx="110" cy="14" r="5" fill="var(--blue-800)"/>
+      <g id="tarazu-beam" style="transition:transform .6s cubic-bezier(.4,1.4,.4,1); transform-origin:110px 22px">
+        <line x1="35" y1="22" x2="185" y2="22" stroke="var(--gold)" stroke-width="3"/>
+        <line x1="45" y1="22" x2="45" y2="52" stroke="var(--gold)" stroke-width="2"/>
+        <line x1="45" y1="52" x2="20" y2="52" stroke="var(--gold)" stroke-width="2"/>
+        <line x1="45" y1="52" x2="70" y2="52" stroke="var(--gold)" stroke-width="2"/>
+        <path d="M18 52 Q45 78 72 52" fill="none" stroke="var(--blue-800)" stroke-width="3"/>
+        <line x1="175" y1="22" x2="175" y2="52" stroke="var(--gold)" stroke-width="2"/>
+        <line x1="175" y1="52" x2="150" y2="52" stroke="var(--gold)" stroke-width="2"/>
+        <line x1="175" y1="52" x2="200" y2="52" stroke="var(--gold)" stroke-width="2"/>
+        <path d="M148 52 Q175 78 202 52" fill="none" stroke="var(--rose)" stroke-width="3"/>
+      </g>
+      <polygon points="95,118 125,118 110,132" fill="var(--gold)"/>
+      <text x="45" y="98" text-anchor="middle" font-size="10" fill="var(--ink-soft2)" font-family="var(--mono)">seller</text>
+      <text x="175" y="98" text-anchor="middle" font-size="10" fill="var(--ink-soft2)" font-family="var(--mono)">you</text>
+    </svg>
+    <div class="chat" id="chat"></div>
+    <div id="deal-box" class="deal-box" style="display:none">
+      <div class="deal-price" id="deal-price"></div>
+      <div class="deal-sub">Deal struck — both sides happy 🤝</div>
+      <button class="btn btn-primary" onclick="confirmDeal()">Add to cart</button>
+    </div>
+    <form class="chat-input" id="chat-form">
+      <input id="chat-input" placeholder='e.g. "I&#39;ll give ₹800"' autocomplete="off">
+      <button class="btn btn-primary" type="submit" id="send-btn">Send</button>
+    </form>
+    <div class="hint" id="rounds-hint">Rounds used: 0/5 · Try to guess the seller's lowest price — see if the AI budges.</div>
+  </div>
+</div>
+
+<!-- ---- Login / Register modal ---- -->
+<div class="modal-backdrop" id="auth-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="eyebrow">welcome</div><h3>Sign in to Mol</h3></div>
+      <button class="icon-btn" onclick="closeAuth()">✕</button>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">Log in</div>
+      <div class="auth-tab" id="tab-register" onclick="setAuthTab('register')">Register</div>
+    </div>
+    <form class="auth-form active" id="login-form">
+      <label>Email <input id="login-email" type="email" placeholder="you@example.com" required></label>
+      <label>Password <input id="login-password" type="password" placeholder="••••••••" required></label>
+      <button class="btn btn-primary btn-wide" type="submit">Log in</button>
+      <div class="auth-note">New to Mol? Switch to Register above.</div>
+    </form>
+    <form class="auth-form" id="register-form">
+      <label>Full name <input id="reg-name" placeholder="Your name" required></label>
+      <label>Email <input id="reg-email" type="email" placeholder="you@example.com" required></label>
+      <label>Password <input id="reg-password" type="password" placeholder="Create a password" required></label>
+      <button class="btn btn-primary btn-wide" type="submit">Create account</button>
+      <div class="auth-note">Already have an account? Switch to Log in above.</div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ICONS = { saree:"🥻", cycle:"🚲", pot:"🏺", audio:"🎧", table:"🪑", spice:"🌿", kurta:"👘", chappal:"👡", lamp:"🪔", basket:"🧺", jewel:"💍", book:"📚" };
+const CAT_EMOJI = { Fashion:"👗", Mobility:"🚲", Home:"🏺", Electronics:"🎧", Grocery:"🌿", Footwear:"👡", Other:"🛍️" };
+
+let products = JSON.parse(localStorage.getItem('mol_products') || 'null') || [
+  {id:"p1",name:"Handloom Cotton Saree",seller:"Kavita Textiles, Bhagalpur",category:"Fashion",listedPrice:2400,floorPrice:1650,img:"saree",blurb:"Pure handloom cotton, natural dyes, woven on a pit loom."},
+  {id:"p2",name:"Refurbished Steel Cycle",seller:"Rathi Cycle Works, Ludhiana",category:"Mobility",listedPrice:3200,floorPrice:2400,img:"cycle",blurb:"Fully serviced, new tyres and chain, single-speed city cycle."},
+  {id:"p3",name:"Clay Water Pot Set (3pc)",seller:"Mitti Studio, Jaipur",category:"Home",listedPrice:850,floorPrice:520,img:"pot",blurb:"Unglazed terracotta, naturally cools and mineralises water."},
+  {id:"p4",name:"Bluetooth Neckband (Local Brand)",seller:"SoundBazar Electronics, Delhi",category:"Electronics",listedPrice:1199,floorPrice:780,img:"audio",blurb:"12hr battery, IPX5, 1-year local warranty."},
+  {id:"p5",name:"Wooden Study Table (Sheesham)",seller:"Anand Furniture, Jodhpur",category:"Home",listedPrice:5400,floorPrice:3900,img:"table",blurb:"Solid sheesham wood, hand-finished, 2 drawers."},
+  {id:"p6",name:"Organic Turmeric (1kg)",seller:"Devgiri Farms, Sangli",category:"Grocery",listedPrice:340,floorPrice:230,img:"spice",blurb:"Single-origin, sun-dried, no polish or additives."},
+  {id:"p7",name:"Chikankari Cotton Kurta",seller:"Lucknow Threads, Lucknow",category:"Fashion",listedPrice:1450,floorPrice:980,img:"kurta",blurb:"Hand-embroidered chikankari, breathable summer cotton."},
+  {id:"p8",name:"Handcrafted Leather Chappals",seller:"Kolhapur Leather Co.",category:"Footwear",listedPrice:900,floorPrice:600,img:"chappal",blurb:"Genuine Kolhapuri leather, hand-stitched sole."},
+  {id:"p9",name:"Brass Diya Lamp Set (5pc)",seller:"Moradabad Metalworks",category:"Home",listedPrice:650,floorPrice:420,img:"lamp",blurb:"Hand-cast brass diyas, perfect for festive decor."},
+  {id:"p10",name:"Bamboo Storage Basket",seller:"Assam Weaves Co-op",category:"Home",listedPrice:480,floorPrice:300,img:"basket",blurb:"Woven bamboo, sturdy handles, foldable design."},
+  {id:"p11",name:"Oxidised Silver Jhumkas",seller:"Jaipur Silver House",category:"Fashion",listedPrice:1100,floorPrice:720,img:"jewel",blurb:"Traditional oxidised silver-plated earrings."},
+  {id:"p12",name:"Used Engineering Textbook Set",seller:"Campus Book Exchange, Pune",category:"Other",listedPrice:750,floorPrice:450,img:"book",blurb:"Gently used first-year engineering set, all in good shape."}
+];
+let cart = JSON.parse(localStorage.getItem('mol_cart') || '[]');
+let user = JSON.parse(localStorage.getItem('mol_user') || 'null');
+let activeCategory = 'All';
+let negotiation = null; // {product, messages, rounds, lastOffer, settled}
+
+function money(n){ return "₹" + Math.round(n).toLocaleString('en-IN'); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function save(){ localStorage.setItem('mol_products', JSON.stringify(products)); localStorage.setItem('mol_cart', JSON.stringify(cart)); }
+function saveUser(){ localStorage.setItem('mol_user', JSON.stringify(user)); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none', 2200); }
+
+/* ---------------- view routing ---------------- */
+function showView(v){
+  ['home','seller','cart','search','account'].forEach(x=>{
+    document.getElementById('view-'+x).classList.toggle('active', x===v);
+  });
+  ['home','seller','cart'].forEach(x=>{
+    const el = document.getElementById('nav-'+x);
+    if (el) el.classList.toggle('active', x===v);
+  });
+  if (v==='cart') renderCart();
+  if (v==='seller') renderSellerList();
+  if (v==='account') renderAccount();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function focusSearch(e){ document.getElementById('header-search').focus(); }
+function goSearch(q){
+  showView('search');
+  document.getElementById('search-input').value = q;
+  renderSearch();
+}
+
+/* ---------------- categories ---------------- */
+function renderCategoryTiles(){
+  const cats = [...new Set(products.map(p=>p.category))];
+  document.getElementById('cat-grid').innerHTML = cats.map(c => `
+    <div class="cat-tile" onclick="jumpToCategory('${c}')">
+      <span class="emoji">${CAT_EMOJI[c]||'🛍️'}</span>
+      <div class="name">${c}</div>
+    </div>
+  `).join('');
+  document.getElementById('stat-categories').textContent = cats.length;
+  document.getElementById('stat-products').textContent = products.length;
+}
+function jumpToCategory(c){ setCategory(c); document.getElementById('filters').scrollIntoView({behavior:'smooth', block:'center'}); }
+
+function renderFilters(){
+  const cats = ['All', ...new Set(products.map(p=>p.category))];
+  document.getElementById('filters').innerHTML = cats.map(c =>
+    `<button class="filter ${c===activeCategory?'active':''}" onclick="setCategory('${c}')">${c}</button>`
+  ).join('');
+}
+function setCategory(c){ activeCategory = c; renderFilters(); renderGrid(); }
+
+function renderGrid(){
+  const list = activeCategory==='All' ? products : products.filter(p=>p.category===activeCategory);
+  document.getElementById('grid-count').textContent = `${list.length} item${list.length===1?'':'s'}`;
+  document.getElementById('grid').innerHTML = list.length ? list.map(p => cardHTML(p)).join('') : `<div class="empty">No items in this category yet.</div>`;
+}
+
+function cardHTML(p){
+  return `
+    <div class="card">
+      <div class="card-img">${ICONS[p.img]||'🛍️'}</div>
+      <div class="card-body">
+        <div class="card-cat">${p.category}</div>
+        <h4>${p.name}</h4>
+        <div class="card-seller">${p.seller}</div>
+        <p class="card-blurb">${p.blurb}</p>
+        <div class="card-foot">
+          <div class="card-price">${money(p.listedPrice)}</div>
+          <button class="btn btn-negotiate" onclick="openModal('${p.id}')">Negotiate ⚖</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- search page ---------------- */
+function renderSearch(){
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  let list = products;
+  if (q) {
+    list = products.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.seller.toLowerCase().includes(q) ||
+      p.blurb.toLowerCase().includes(q)
+    );
+  }
+  document.getElementById('search-meta').textContent = q
+    ? `${list.length} result${list.length===1?'':'s'} for "${q}"`
+    : `Showing all ${list.length} listings`;
+  document.getElementById('search-grid').innerHTML = list.length ? list.map(p => cardHTML(p)).join('') : `<div class="empty">No matches — try a different word.</div>`;
+}
+
+function renderSellerList(){
+  document.getElementById('seller-list').innerHTML = products.map(p => `
+    <div class="seller-item">
+      <div><strong>${p.name}</strong><div class="card-seller">${p.seller}</div></div>
+      <div class="seller-item-prices">
+        <span>${money(p.listedPrice)}</span>
+        <span class="secret-tag">min ${money(p.floorPrice)} (private)</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('seller-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  const listed = parseFloat(document.getElementById('f-listed').value);
+  const floor = parseFloat(document.getElementById('f-floor').value);
+  if (floor > listed) { showToast('Minimum price cannot exceed listed price'); return; }
+  products.unshift({
+    id: uid(),
+    name: document.getElementById('f-name').value,
+    seller: document.getElementById('f-seller').value || 'Independent Seller',
+    category: document.getElementById('f-category').value,
+    listedPrice: listed,
+    floorPrice: floor,
+    img: 'table',
+    blurb: document.getElementById('f-blurb').value || 'New listing on Mol.'
+  });
+  save();
+  this.reset();
+  renderFilters(); renderGrid(); renderSellerList(); renderCategoryTiles();
+  showToast('Listed! Buyers can now negotiate on it.');
+});
+
+/* ---------------- cart ---------------- */
+function renderCart(){
+  const empty = document.getElementById('cart-empty');
+  const list = document.getElementById('cart-list');
+  const totalRow = document.getElementById('cart-total-row');
+  const placeBtn = document.getElementById('place-order');
+  if (cart.length===0){
+    empty.style.display='block'; list.style.display='none'; totalRow.style.display='none'; placeBtn.style.display='none';
+    return;
+  }
+  empty.style.display='none'; list.style.display='flex'; totalRow.style.display='flex'; placeBtn.style.display='block';
+  list.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-icon">${ICONS[item.img]||'🛍️'}</div>
+      <div class="cart-item-info"><strong>${item.name}</strong><div class="card-seller">${item.seller}</div></div>
+      <div class="cart-item-price">${money(item.price)}</div>
+      <button class="icon-btn" onclick="removeFromCart('${item.id}')">✕</button>
+    </div>
+  `).join('');
+  document.getElementById('cart-total').textContent = money(cart.reduce((s,i)=>s+i.price,0));
+  updateCartBadge();
+}
+function removeFromCart(id){ cart = cart.filter(i=>i.id!==id); save(); renderCart(); updateCartBadge(); }
+function updateCartBadge(){
+  const b = document.getElementById('cart-count');
+  if (cart.length>0){ b.style.display='inline'; b.textContent=cart.length; } else { b.style.display='none'; }
+}
+function placeOrder(){ cart=[]; save(); renderCart(); updateCartBadge(); showToast('Order placed — thank you!'); showView('home'); }
+
+/* ---------------- account / auth ---------------- */
+function openAccount(){
+  if (user){ showView('account'); }
+  else { document.getElementById('auth-backdrop').classList.add('open'); }
+}
+function closeAuth(){ document.getElementById('auth-backdrop').classList.remove('open'); }
+function setAuthTab(tab){
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+  document.getElementById('login-form').classList.toggle('active', tab==='login');
+  document.getElementById('register-form').classList.toggle('active', tab==='register');
+}
+function renderAccount(){
+  document.getElementById('acct-card').innerHTML = `
+    <div class="acct-avatar">${(user.name||'U').charAt(0).toUpperCase()}</div>
+    <div class="acct-row"><span>Name</span><span>${user.name}</span></div>
+    <div class="acct-row"><span>Email</span><span>${user.email}</span></div>
+    <div class="acct-row"><span>Listings</span><span>${products.length} on Mol</span></div>
+    <div class="acct-row"><span>Cart items</span><span>${cart.length}</span></div>
+    <button class="btn btn-outline btn-wide" onclick="logout()">Log out</button>
+  `;
+}
+function logout(){ user=null; saveUser(); showToast('Logged out'); showView('home'); }
+
+document.getElementById('login-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const stored = JSON.parse(localStorage.getItem('mol_users')||'{}');
+  const record = stored[email];
+  if (!record){ showToast("No account found — try Register instead"); setAuthTab('register'); return; }
+  if (record.password !== document.getElementById('login-password').value){ showToast('Incorrect password'); return; }
+  user = { name: record.name, email };
+  saveUser(); closeAuth(); showToast(`Welcome back, ${user.name.split(' ')[0]}!`); showView('account');
+});
+
+document.getElementById('register-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const stored = JSON.parse(localStorage.getItem('mol_users')||'{}');
+  stored[email] = { name, password };
+  localStorage.setItem('mol_users', JSON.stringify(stored));
+  user = { name, email }; saveUser();
+  closeAuth(); showToast(`Welcome to Mol, ${name.split(' ')[0]}!`); showView('account');
+});
+
+/* ---------------- negotiation modal (fully offline, rule-based AI) ---------------- */
+const SELLER_GREETING = (p) => `Namaste! ${p.name} — listed at ${money(p.listedPrice)}. What's on your mind?`;
+const COUNTER_REASONS = [
+  "the craftsmanship alone takes real time to get right",
+  "quality materials like this don't come cheap on my end",
+  "I'm already giving you a fair rate compared to the market",
+  "stock is limited right now, so I can't go much lower",
+  "there's real skill behind this — I have to protect that value",
+  "I already trimmed my margin as much as I can"
+];
+const ACCEPT_PHRASES = [
+  "Theek hai, that works for me — deal!",
+  "Chalo, you've got a fair price there. Deal!",
+  "Alright, I can do that for you. Pakka deal!",
+  "You've bargained well — I'll agree to that."
+];
+const SWEETENERS = [
+  " I'll even throw in free delivery.",
+  " I'll add a small discount if you're ordering more than one.",
+  " I'll make sure it's packed extra carefully for you."
+];
+// Response variants keyed by how close the buyer's specific offer is to a fair,
+// mutually-profitable price. This is what makes the reply track the actual
+// number the buyer typed, instead of following a fixed script.
+const BIG_GAP_OPENERS = [
+  "That's quite a distance from where I can go —",
+  "Arre, that's a bit too low for me —",
+  "That won't really work on my end —"
+];
+const CLOSER_OPENERS = [
+  "We're getting somewhere —",
+  "Okay, now we're talking —",
+  "That's more reasonable —"
+];
+const ALMOST_OPENERS = [
+  "You're really close now! —",
+  "Just a little more and we're there —",
+  "Almost there —"
+];
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function openModal(productId){
+  const product = products.find(p=>p.id===productId);
+  negotiation = { product, messages:[{role:'seller', text: SELLER_GREETING(product)}], rounds:0, lastOffer:product.listedPrice, lastSellerCounter:product.listedPrice, settled:null };
+  document.getElementById('modal-title').textContent = product.name;
+  document.getElementById('deal-box').style.display='none';
+  document.getElementById('chat-form').style.display='flex';
+  document.getElementById('chat-input').value='';
+  document.getElementById('chat-input').placeholder = `e.g. "I'll give ${money(Math.round(product.listedPrice*0.7))}"`;
+  updateTarazu();
+  renderChat();
+  document.getElementById('modal-backdrop').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-backdrop').classList.remove('open'); negotiation=null; }
+
+function renderChat(){
+  const el = document.getElementById('chat');
+  el.innerHTML = negotiation.messages.map(m => `<div class="bubble ${m.role}">${m.text}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+  document.getElementById('rounds-hint').textContent = `Rounds used: ${negotiation.rounds}/5 · Try to guess the seller's lowest price — see if the AI budges.`;
+}
+function renderTyping(){
+  const el = document.getElementById('chat');
+  el.innerHTML = negotiation.messages.map(m => {
+    const cls = m.role==='seller typing' ? 'bubble seller typing' : `bubble ${m.role}`;
+    return `<div class="${cls}">${m.text}</div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function updateTarazu(){
+  const { product, lastOffer, settled } = negotiation;
+  const range = Math.max(1, product.listedPrice - product.floorPrice);
+  const pos = Math.min(1, Math.max(0, ((settled||lastOffer) - product.floorPrice) / range));
+  const angle = settled ? 0 : (0.5 - pos) * 22;
+  document.getElementById('tarazu-beam').style.transform = `rotate(${angle}deg)`;
+}
+
+/* Offline rule-based negotiation "AI" — no network call, always works. */
+function sellerRespond(product, buyerOffer, roundNum, prevSellerCounter){
+  const floor = product.floorPrice;
+  const listed = product.listedPrice;
+  const range = Math.max(1, listed - floor);
+
+  // No numeric offer detected — friendly nudge
+  if (buyerOffer == null){
+    return { text: `Go ahead, make me an offer — what would you like to pay for the ${product.name}?`, deal:null };
+  }
+
+  // Offer at/above listed price — instant happy accept
+  if (buyerOffer >= listed){
+    return { text: `${pick(ACCEPT_PHRASES)} That's the full price, very generous of you!`, deal: listed };
+  }
+
+  // Offer at/above floor — accept, sometimes with a small sweetener
+  if (buyerOffer >= floor){
+    const sweet = Math.random() < 0.5 ? pick(SWEETENERS) : '';
+    return { text: `${pick(ACCEPT_PHRASES)}${sweet}`, deal: buyerOffer };
+  }
+
+  // Offer below floor — respond to the SPECIFIC amount the buyer typed, not a
+  // generic script. We work out how close their offer is to a price that's
+  // still profitable for the seller (above floor) and fair for the buyer
+  // (below listed), and let that "quality" of the offer — plus how many
+  // rounds have passed — drive both the number and the tone of the reply.
+  // The counter is still clamped so it can never rise above the seller's own
+  // previous counter-offer, no matter what the buyer's number does.
+  const reason = pick(COUNTER_REASONS);
+  const gap = floor - buyerOffer;                 // how far below floor this offer sits
+  const gapRatio = Math.min(1, gap / range);        // 1 = lowball, 0 = right at the floor
+  const buyerQuality = 1 - gapRatio;                // how "fair"/profitable-for-both this offer already is
+
+  // Room above the floor the seller is still holding onto: shrinks as rounds
+  // pass (seller gets more flexible over time) and shrinks further the closer
+  // the buyer's own offer already is to a price that works for both sides.
+  const baseRatio = Math.max(0.05, 0.55 - roundNum * 0.11);
+  let remainingRatio = baseRatio * (1 - buyerQuality * 0.65);
+  remainingRatio = Math.max(0.03, remainingRatio);
+
+  let counter = Math.round(floor + range * remainingRatio);
+  counter = Math.min(counter, listed);
+  if (prevSellerCounter != null) counter = Math.min(counter, prevSellerCounter);
+  counter = Math.max(floor, counter);
+
+  if (roundNum >= 4){
+    // final round — meet close to floor to try to close the deal
+    counter = Math.max(floor, Math.min(counter, Math.round(floor * 1.02)));
+    return { text: `We're running low on rounds — let's meet at ${money(counter)} and call it a deal, ${reason}.`, deal: null, counter };
+  }
+
+  let opener;
+  if (gapRatio > 0.6) opener = pick(BIG_GAP_OPENERS);
+  else if (gapRatio > 0.25) opener = pick(CLOSER_OPENERS);
+  else opener = pick(ALMOST_OPENERS);
+
+  return { text: `${opener} ${reason}. I can do ${money(counter)} instead.`, deal: null, counter };
+}
+
+document.getElementById('chat-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !negotiation || negotiation.settled) return;
+  input.value='';
+  document.getElementById('send-btn').disabled = true;
+
+  negotiation.messages.push({role:'buyer', text});
+  const offerMatch = text.match(/(\d[\d,]*)/);
+  const buyerOffer = offerMatch ? parseInt(offerMatch[1].replace(/,/g,''),10) : null;
+  if (buyerOffer != null) negotiation.lastOffer = buyerOffer;
+  renderChat(); updateTarazu();
+
+  negotiation.messages.push({role:'seller typing', text:'Thinking…'});
+  renderTyping();
+
+  const { product, rounds } = negotiation;
+
+  // simulate a brief natural "typing" delay — everything computed locally, no network needed
+  setTimeout(() => {
+    const result = sellerRespond(product, buyerOffer, rounds, negotiation.lastSellerCounter);
+    negotiation.messages.pop(); // remove typing indicator
+    negotiation.messages.push({role:'seller', text: result.text});
+    negotiation.rounds++;
+    if (result.counter) {
+      negotiation.lastOffer = result.counter;
+      negotiation.lastSellerCounter = result.counter;
+    }
+
+    if (result.deal){
+      negotiation.settled = result.deal;
+      document.getElementById('deal-price').textContent = money(negotiation.settled);
+      document.getElementById('deal-box').style.display='block';
+      document.getElementById('chat-form').style.display='none';
+    } else if (negotiation.rounds >= 5) {
+      // out of rounds without agreement — offer final floor price as last resort
+      negotiation.settled = product.floorPrice;
+      negotiation.messages.push({role:'seller', text: `Alright, final offer — ${money(product.floorPrice)}, take it or leave it.`});
+      document.getElementById('deal-price').textContent = money(negotiation.settled);
+      document.getElementById('deal-box').style.display='block';
+      document.getElementById('chat-form').style.display='none';
+    }
+    renderChat(); updateTarazu();
+    document.getElementById('send-btn').disabled = false;
+  }, 550 + Math.random()*450);
+});
+
+function confirmDeal(){
+  const { product, settled } = negotiation;
+  cart.push({ id: uid(), name: product.name, seller: product.seller, price: settled, img: product.img });
+  save();
+  updateCartBadge();
+  showToast(`Added at ${money(settled)} 🎉`);
+  closeModal();
+  showView('home');
+}
+
+/* ---------------- init ---------------- */
+save();
+renderCategoryTiles();
+renderFilters();
+renderGrid();
+updateCartBadge();
+</script>
+</body>
+</html>
